@@ -1,0 +1,26 @@
+{
+  "name": "epson-connect-admin",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Epson Expert Connect - admin panel and agent console",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "dev:http": "cross-env HTTP=true vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "qrcode.react": "^4.1.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.28.0",
+    "socket.io-client": "^4.8.1"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-basic-ssl": "^1.2.0",
+    "@vitejs/plugin-react": "^4.3.4",
+    "cross-env": "^7.0.3",
+    "vite": "^5.4.11"
+  }
+}
