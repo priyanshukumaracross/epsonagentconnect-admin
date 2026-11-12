@@ -10,8 +10,25 @@
 const DISCONNECT_GRACE_MS = 4000;  // "disconnected" often recovers by itself within a few seconds
 const RESTART_EVERY_MS = 10000;    // keep retrying while not connected
 
+/** Drop STUN/TURN entries the browser can't parse: one bad URL would otherwise make the whole call fail. */
+export function usableIceServers(iceServers = []) {
+  return iceServers.flatMap((server) => {
+    const urls = [].concat(server.urls || []).filter((url) => {
+      try { new RTCPeerConnection({ iceServers: [{ ...server, urls: url }] }).close(); return true; } catch {
+        console.warn('Ignoring invalid ICE server URL:', url);
+        return false;
+      }
+    });
+    return urls.length ? [{ ...server, urls }] : [];
+  });
+}
+
+function newConnection(iceServers) {
+  try { return new RTCPeerConnection({ iceServers }); } catch { return new RTCPeerConnection({ iceServers: usableIceServers(iceServers) }); }
+}
+
 export function createPeer({ iceServers, localStream, recvVideo, onSignal, onRemoteStream, onStateChange, onNeedRestart }) {
-  const pc = new RTCPeerConnection({ iceServers });
+  const pc = newConnection(iceServers);
   const pendingIce = [];
   let watchdog = null;
   let lastRestart = 0;
@@ -58,7 +75,8 @@ export function createPeer({ iceServers, localStream, recvVideo, onSignal, onRem
     async restartIce(freshIceServers) {
       if (pc.signalingState === 'closed') return;
       if (freshIceServers?.length) {
-        try { pc.setConfiguration({ ...pc.getConfiguration(), iceServers: freshIceServers }); } catch (err) { console.warn(err); }
+        const apply = (list) => pc.setConfiguration({ ...pc.getConfiguration(), iceServers: list });
+        try { apply(freshIceServers); } catch { try { apply(usableIceServers(freshIceServers)); } catch (err) { console.warn(err); } }
       }
       if (pc.signalingState !== 'stable') return;
       await pc.setLocalDescription(await pc.createOffer({ iceRestart: true }));

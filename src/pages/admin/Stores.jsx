@@ -3,6 +3,7 @@ import { QRCodeCanvas } from 'qrcode.react';
 import { api, WEBSITE_URL } from '../../lib/api.js';
 import { Empty, Modal, Spinner, useFetch, useToast } from '../../components/ui.jsx';
 import { CopyIcon, DownloadIcon, PlusIcon, QrIcon } from '../../components/Icons.jsx';
+import epsonLogo from '../../assets/epson-logo.webp';
 
 export const storeUrl = (code, product) => {
   const p = new URLSearchParams({ store: code });
@@ -128,7 +129,7 @@ function QrModal({ store, onClose }) {
       </label>
       <div className="qr-box" ref={wrap}>
         <div className="qr-card">
-          <span className="wordmark">EPSON</span>
+          <img className="wordmark" src={epsonLogo} alt="Epson" />
           <QRCodeCanvas value={url} size={240} level="M" marginSize={2} />
           <b>Scan to talk to an Epson expert</b>
           <span className="tiny">Free video or voice call</span>

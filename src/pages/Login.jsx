@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useAuth } from '../auth/AuthContext.jsx';
 import { Spinner } from '../components/ui.jsx';
+import epsonLogo from '../assets/epson-logo.webp';
 
 export default function Login() {
   const { login } = useAuth();
@@ -24,7 +25,7 @@ export default function Login() {
   return (
     <div className="login-page">
       <div className="login-art">
-        <span className="wordmark light">EPSON</span>
+        <img className="wordmark light" src={epsonLogo} alt="Epson" />
         <div>
           <h1>Expert Connect</h1>
           <p>Help in-store customers choose the right Epson product — over live video and voice calls.</p>
@@ -33,7 +34,7 @@ export default function Login() {
       </div>
       <div className="login-form-wrap">
         <form className="login-card" onSubmit={submit}>
-          <span className="wordmark mobile-only">EPSON</span>
+          <img className="wordmark mobile-only" src={epsonLogo} alt="Epson" />
           <h2>Sign in</h2>
           <p className="muted">Admins and product experts use the same login.</p>
           <label className="field">

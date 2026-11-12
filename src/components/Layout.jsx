@@ -5,6 +5,7 @@ import { initials } from '../lib/format.js';
 import {
   CallsIcon, CloseIcon, DashboardIcon, HeadsetIcon, HistoryIcon, LeadsIcon, LogoutIcon, MenuIcon, StoreIcon, TeamIcon, UserIcon,
 } from './Icons.jsx';
+import epsonLogo from '../assets/epson-logo.webp';
 
 const NAV = {
   admin: [
@@ -33,7 +34,7 @@ export default function Layout() {
     <div className="shell">
       <aside className={`sidebar ${open ? 'open' : ''}`}>
         <div className="side-brand">
-          <span className="wordmark">EPSON</span>
+          <img className="wordmark" src={epsonLogo} alt="Epson" />
           <span className="side-sub">{isAgent ? 'Expert Console' : 'Admin'}</span>
           <button className="icon-btn mobile-only" onClick={() => setOpen(false)} aria-label="Close menu"><CloseIcon /></button>
         </div>
