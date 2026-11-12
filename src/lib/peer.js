@@ -1,11 +1,20 @@
 /**
  * Thin wrapper around RTCPeerConnection used for customer <-> agent calls.
- * Signaling messages ({type:'offer'|'answer'|'ice'}) are carried over Socket.IO.
+ * Signaling messages ({type:'offer'|'answer'|'ice'|'restart-request'}) are carried over Socket.IO.
  * (Same file exists in website/src/lib/peer.js.)
+ *
+ * Self-healing: if the media path breaks (network switch, Wi-Fi drop, relay hiccup) the
+ * connection goes "disconnected"/"failed" and onNeedRestart is called. The caller (customer)
+ * then runs restartIce(); the answering side (expert) asks the caller with 'restart-request'.
  */
-export function createPeer({ iceServers, localStream, recvVideo, onSignal, onRemoteStream, onStateChange }) {
+const DISCONNECT_GRACE_MS = 4000;  // "disconnected" often recovers by itself within a few seconds
+const RESTART_EVERY_MS = 10000;    // keep retrying while not connected
+
+export function createPeer({ iceServers, localStream, recvVideo, onSignal, onRemoteStream, onStateChange, onNeedRestart }) {
   const pc = new RTCPeerConnection({ iceServers });
   const pendingIce = [];
+  let watchdog = null;
+  let lastRestart = 0;
 
   localStream?.getTracks().forEach((t) => pc.addTrack(t, localStream));
   if (!localStream?.getAudioTracks().length) pc.addTransceiver('audio', { direction: 'recvonly' });
@@ -13,7 +22,25 @@ export function createPeer({ iceServers, localStream, recvVideo, onSignal, onRem
 
   pc.ontrack = (e) => onRemoteStream?.(e.streams[0] || new MediaStream([e.track]));
   pc.onicecandidate = (e) => { if (e.candidate) onSignal({ type: 'ice', candidate: e.candidate.toJSON() }); };
-  pc.onconnectionstatechange = () => onStateChange?.(pc.connectionState);
+  pc.onconnectionstatechange = () => {
+    const state = pc.connectionState;
+    onStateChange?.(state);
+    clearTimeout(watchdog);
+    if (state === 'failed') needRestart();
+    else if (state === 'disconnected') watchdog = setTimeout(() => needRestart(), DISCONNECT_GRACE_MS);
+  };
+
+  // force: the other side reported a broken path even though ours may still look connected
+  function needRestart(force = false) {
+    clearTimeout(watchdog);
+    if (!onNeedRestart || pc.signalingState === 'closed') return;
+    if (!force && pc.connectionState === 'connected') return;
+    const wait = lastRestart + RESTART_EVERY_MS - Date.now();
+    if (wait > 0) { watchdog = setTimeout(() => needRestart(force), wait); return; }
+    lastRestart = Date.now();
+    Promise.resolve(onNeedRestart()).catch((err) => console.warn('ICE restart failed', err));
+    watchdog = setTimeout(() => needRestart(), RESTART_EVERY_MS); // still not connected -> try again
+  }
 
   async function flushIce() {
     while (pendingIce.length) {
@@ -27,6 +54,18 @@ export function createPeer({ iceServers, localStream, recvVideo, onSignal, onRem
       await pc.setLocalDescription(await pc.createOffer());
       onSignal({ type: 'offer', sdp: pc.localDescription.toJSON() });
     },
+    /** Caller side: new network path for the same call (keeps tracks and encryption). */
+    async restartIce(freshIceServers) {
+      if (pc.signalingState === 'closed') return;
+      if (freshIceServers?.length) {
+        try { pc.setConfiguration({ ...pc.getConfiguration(), iceServers: freshIceServers }); } catch (err) { console.warn(err); }
+      }
+      if (pc.signalingState !== 'stable') return;
+      await pc.setLocalDescription(await pc.createOffer({ iceRestart: true }));
+      onSignal({ type: 'offer', restart: true, sdp: pc.localDescription.toJSON() });
+    },
+    /** The other side reports a broken connection. */
+    requestRestart: () => needRestart(true),
     async handle(msg) {
       if (!msg || pc.signalingState === 'closed') return;
       if (msg.type === 'offer') {
@@ -48,6 +87,7 @@ export function createPeer({ iceServers, localStream, recvVideo, onSignal, onRem
       if (sender) await sender.replaceTrack(track);
     },
     close() {
+      clearTimeout(watchdog);
       pc.ontrack = pc.onicecandidate = pc.onconnectionstatechange = null;
       try { pc.close(); } catch { /* already closed */ }
     },

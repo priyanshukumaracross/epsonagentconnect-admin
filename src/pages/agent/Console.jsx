@@ -117,7 +117,10 @@ export default function Console() {
       const st = r.current;
       if (!st.callId || !st.stream) return;
       try {
-        if (msg.type === 'offer') {
+        if (msg.type === 'offer' && msg.restart && st.peer) {
+          // customer is reconnecting the same call over a new network path
+          await st.peer.handle(msg);
+        } else if (msg.type === 'offer') {
           st.peer?.close();
           st.peer = createPeer({
             iceServers: st.ice || [],
@@ -136,6 +139,8 @@ export default function Console() {
               }
               if (state === 'disconnected' || state === 'failed') setNetIssue(true);
             },
+            // the customer's browser starts the reconnect (it created the offer)
+            onNeedRestart: () => socket.emit('signal', { type: 'restart-request' }),
           });
           await st.peer.handle(msg);
           const early = st.earlyIce.splice(0);
@@ -175,9 +180,13 @@ export default function Console() {
   const accept = async (item) => {
     if (!socket || accepting || active) return;
     setAccepting(item.id);
+    // fresh relay credentials for every call (the console may have been open for days)
+    const icePromise = api.get('/public/ice').then((d) => d.iceServers).catch(() => null);
     let stream;
     try {
       stream = await getMedia(item.mode);
+      const fresh = await icePromise;
+      if (fresh?.length) r.current.ice = fresh;
     } catch (err) {
       toast(mediaErrorMessage(err), 'bad');
       setAccepting(null);
