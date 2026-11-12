@@ -54,21 +54,26 @@ export function RealtimeProvider({ children }) {
 
   useEffect(() => {
     if (!token) return undefined;
-    // Default transports (HTTP long-polling, upgraded to WebSocket when the host allows it) work behind cPanel/Passenger proxies
+    // Default transports: HTTP long-polling, upgraded to WebSocket when available
     const s = io(SOCKET_URL, { auth: { token } });
     let t;
+    let retry;
     s.on('connect', () => setConnected(true));
     s.on('disconnect', (reason) => {
       setConnected(false);
       if (reason === 'io server disconnect') logout(); // account deactivated / role changed
     });
-    s.on('connect_error', (err) => { if (err.message === 'UNAUTHORIZED') logout(); });
+    s.on('connect_error', (err) => {
+      if (err.message === 'UNAUTHORIZED') logout();
+      // server-side rejections are not retried automatically by socket.io - try again shortly
+      else if (err.message === 'SERVER_ERROR') { clearTimeout(retry); retry = setTimeout(() => s.connect(), 3000); }
+    });
     s.on('queue:update', setQueue);
     s.on('agent:status', setStatusState);
     s.on('agents:presence', setPresence);
     s.on('calls:changed', () => { clearTimeout(t); t = setTimeout(() => setTick((x) => x + 1), 400); });
     setSocket(s);
-    return () => { clearTimeout(t); s.disconnect(); setSocket(null); };
+    return () => { clearTimeout(t); clearTimeout(retry); s.disconnect(); setSocket(null); };
   }, [token, logout]);
 
   const setStatus = useCallback((st) => socket?.emit('agent:setStatus', st), [socket]);

@@ -1,8 +1,8 @@
-// public/config.js (editable after build) wins, then VITE_* values at build time.
-const RUNTIME = (typeof window !== 'undefined' && window.APP_CONFIG) || {};
-const BASE = (RUNTIME.API_URL || import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
+// Backend address (Render), set as VITE_API_URL in Vercel. Empty in local dev: Vite proxies /api to the backend.
+const BASE = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
 export const SOCKET_URL = BASE || undefined;
-export const WEBSITE_URL = (RUNTIME.WEBSITE_URL || import.meta.env.VITE_WEBSITE_URL || 'http://localhost:5173').replace(/\/$/, '');
+// Customer website address (Vercel) - store QR codes point here
+export const WEBSITE_URL = (import.meta.env.VITE_WEBSITE_URL || 'https://localhost:5173').replace(/\/$/, '');
 
 const TOKEN_KEY = 'epson_console_token';
 let onUnauthorized = () => {};
