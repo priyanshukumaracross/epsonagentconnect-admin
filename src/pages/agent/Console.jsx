@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { api } from '../../lib/api.js';
 import { createPeer, getMedia, mediaErrorMessage } from '../../lib/peer.js';
-import { ago, clock, duration, initials, mobile, refId } from '../../lib/format.js';
+import { ago, clock, duration, initials, mobile, refId, place } from '../../lib/format.js';
 import { useAuth, useRealtime } from '../../auth/AuthContext.jsx';
 import { Empty, Rating, Spinner, useFetch, useToast } from '../../components/ui.jsx';
 import { BellIcon, BellOffIcon, FlipIcon, HangupIcon, MicIcon, MicOffIcon, PhoneIcon, VideoIcon, VideoOffIcon } from '../../components/Icons.jsx';
@@ -314,7 +314,7 @@ export default function Console() {
           <h2>{active.customer_name}</h2>
           <a className="link" href={`tel:+91${active.mobile}`}>{mobile(active.mobile)}</a>
           <dl className="dl">
-            <dt>Location</dt><dd>{active.city}, {active.state}</dd>
+            <dt>Location</dt><dd>{place(active.city, active.state)}</dd>
             <dt>Store</dt><dd>{active.store_name || '—'}</dd>
             <dt>Product</dt><dd>{active.product || '—'}</dd>
             <dt>Looking for</dt><dd>{active.interests?.length ? active.interests.join(', ') : '—'}</dd>
@@ -382,7 +382,7 @@ export default function Console() {
                   <div className="q-ic">{q.mode === 'video' ? <VideoIcon /> : <PhoneIcon />}</div>
                   <div className="q-main">
                     <b>{q.customer_name}</b>
-                    <span className="tiny">{q.city}, {q.state}{q.store_name ? ` · ${q.store_name}` : ''}</span>
+                    <span className="tiny">{[place(q.city, q.state), q.store_name].filter((x) => x && x !== '—').join(' · ') || '—'}</span>
                     <span className="q-tags">
                       <span className="tag">{q.mode === 'video' ? 'Video' : 'Voice'}</span>
                       <span className={`tag ${speaks ? 'tag-interested' : 'tag-follow_up'}`}>{q.language}{speaks ? '' : ' (not in your list)'}</span>

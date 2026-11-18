@@ -38,7 +38,7 @@ export default function History() {
                   <tr key={c.id}>
                     <td className="nowrap">{dateTime(c.requested_at)}<div className="tiny mono">{refId(c.id)}</div></td>
                     <td><b>{c.customer_name}</b><div className="tiny">{mobile(c.mobile)}</div></td>
-                    <td>{c.city}<div className="tiny">{c.store_name || c.state}</div></td>
+                    <td>{c.city || '—'}<div className="tiny">{c.store_name || c.state}</div></td>
                     <td><span className="mode-ic">{c.mode === 'video' ? <VideoIcon width="15" /> : <PhoneIcon width="15" />}{c.language}</span></td>
                     <td><StatusBadge status={c.status} /><RequestTags items={c.customer_requests} /></td>
                     <td className="num">{duration(c.duration_seconds)}</td>

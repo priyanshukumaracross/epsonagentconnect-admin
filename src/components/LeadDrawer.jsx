@@ -1,5 +1,5 @@
 import { api } from '../lib/api.js';
-import { dateTime, duration, mobile, refId } from '../lib/format.js';
+import { dateTime, duration, mobile, refId, place } from '../lib/format.js';
 import { Drawer, OutcomeTag, Rating, RequestTags, Spinner, StatusBadge, useFetch } from './ui.jsx';
 
 /** Customer profile + full call timeline. */
@@ -22,7 +22,7 @@ export default function LeadDrawer({ leadId, onClose }) {
             <span className={`pill ${lead.connected ? 'pill-good' : 'pill-warn'}`}>{lead.connected ? 'Connected with expert' : 'Not connected yet'}</span>
           </div>
           <dl className="dl">
-            <dt>Location</dt><dd>{lead.city}, {lead.state}</dd>
+            <dt>Location</dt><dd>{place(lead.city, lead.state)}</dd>
             <dt>Store</dt><dd>{lead.store_name ? `${lead.store_name} (${lead.store_code})` : '—'}</dd>
             <dt>Product</dt><dd>{lead.product || '—'}</dd>
             <dt>Looking for</dt><dd>{lead.interests?.length ? lead.interests.join(', ') : '—'}</dd>
@@ -58,7 +58,7 @@ export default function LeadDrawer({ leadId, onClose }) {
             <>
               <h4 className="section-title">Other submissions from this number</h4>
               <ul className="plain-list">
-                {data.related.map((r) => <li key={r.id}>{r.name} · {r.city} · <span className="tiny">{dateTime(r.created_at)}</span></li>)}
+                {data.related.map((r) => <li key={r.id}>{r.name} · {place(r.city, r.state)} · <span className="tiny">{dateTime(r.created_at)}</span></li>)}
               </ul>
             </>
           )}

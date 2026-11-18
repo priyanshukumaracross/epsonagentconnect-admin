@@ -29,6 +29,8 @@ export function ago(d) {
   return `${Math.floor(s / 3600)}h ${Math.floor((s % 3600) / 60)}m`;
 }
 
+/** "South Delhi, Delhi" / "Delhi" / "—" (state and city are optional on leads) */
+export const place = (city, state) => [city, state].filter(Boolean).join(', ') || '—';
 export const mobile = (m) => (m ? `+91 ${m.slice(0, 5)} ${m.slice(5)}` : '—');
 export const initials = (name = '') => name.split(' ').filter(Boolean).map((p) => p[0]).join('').slice(0, 2).toUpperCase();
 

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { api, qs } from '../../lib/api.js';
-import { dateTime, duration, mobile, refId, STATUS } from '../../lib/format.js';
+import { dateTime, duration, mobile, refId, STATUS, place } from '../../lib/format.js';
 import { useRealtime } from '../../auth/AuthContext.jsx';
 import { DoneBadge, Empty, OutcomeTag, Pagination, Rating, RequestTags, Spinner, StatusBadge, useFetch, useToast } from '../../components/ui.jsx';
 import { DownloadIcon, PhoneIcon, SearchIcon, VideoIcon } from '../../components/Icons.jsx';
@@ -89,7 +89,7 @@ export default function Calls() {
                     <td className="mono">{refId(c.id)}</td>
                     <td className="nowrap">{dateTime(c.requested_at)}</td>
                     <td><b>{c.customer_name}</b><div className="tiny">{mobile(c.mobile)}</div></td>
-                    <td>{c.city}, {c.state}<div className="tiny">{c.store_name || 'No store'}</div></td>
+                    <td>{place(c.city, c.state)}<div className="tiny">{c.store_name || 'No store'}</div></td>
                     <td className="nowrap"><span className="mode-ic">{c.mode === 'video' ? <VideoIcon width="15" /> : <PhoneIcon width="15" />}{c.mode === 'video' ? 'Video' : 'Voice'}</span><div className="tiny">{c.language}</div></td>
                     <td>{c.agent_name || <span className="tiny">—</span>}</td>
                     <td><StatusBadge status={c.status} /><RequestTags items={c.customer_requests} /></td>

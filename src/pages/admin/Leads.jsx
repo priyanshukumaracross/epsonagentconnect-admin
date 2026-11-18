@@ -77,7 +77,7 @@ export default function Leads() {
                     <td className="nowrap">{dateTime(l.created_at)}</td>
                     <td><b>{l.name}</b></td>
                     <td className="nowrap">{mobile(l.mobile)}</td>
-                    <td>{l.city}<div className="tiny">{l.state}</div></td>
+                    <td>{l.city || '—'}<div className="tiny">{l.state}</div></td>
                     <td>{l.store_name || <span className="tiny">—</span>}</td>
                     <td>{l.product || '—'}<div className="tiny">{l.interests?.join(', ')}</div></td>
                     <td className="num">{l.call_count}</td>

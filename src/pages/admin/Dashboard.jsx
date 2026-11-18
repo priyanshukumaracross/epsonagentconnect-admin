@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api, qs } from '../../lib/api.js';
-import { ago, duration, isoDay, mobile } from '../../lib/format.js';
+import { ago, duration, isoDay, mobile, place } from '../../lib/format.js';
 import { useRealtime } from '../../auth/AuthContext.jsx';
 import { Empty, Rating, Spinner, StatusBadge, useFetch } from '../../components/ui.jsx';
 
@@ -75,7 +75,7 @@ export default function Dashboard() {
                 <ul className="live-calls">
                   {live.data.items.map((c) => (
                     <li key={c.id}>
-                      <div><b>{c.customer_name}</b><span className="tiny">{mobile(c.mobile)} · {c.city}</span></div>
+                      <div><b>{c.customer_name}</b><span className="tiny">{mobile(c.mobile)} · {place(c.city, c.state)}</span></div>
                       <div className="right"><StatusBadge status={c.status} /><span className="tiny">{c.agent_name || `waiting ${ago(c.requested_at)}`}</span></div>
                     </li>
                   ))}
@@ -99,7 +99,7 @@ export default function Dashboard() {
             </div>
             <div className="card">
               <h3>Top states</h3>
-              <BarList rows={stats.data.topStates.map((s) => ({ label: s.state, value: s.leads }))} />
+              <BarList rows={stats.data.topStates.map((s) => ({ label: s.state || 'Not given', value: s.leads }))} />
             </div>
             <div className="card">
               <h3>Top stores</h3>
